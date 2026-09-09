@@ -18,6 +18,7 @@ A no-build, static website for GitHub Pages. It recreates a late-1990s/early-200
 4. Add the new filename to that folder's `index.json`, newest first.
 5. Commit and push.
 
+```
 ATHS Robotics & Boris Donald's Science Classes/
 ├── .git/
 ├── 404.html
@@ -40,3 +41,4 @@ ATHS Robotics & Boris Donald's Science Classes/
 │   │   ├── (robotics-related posts and index.json)
 ├── tests/
 │   ├── (test files for the project)
+```
