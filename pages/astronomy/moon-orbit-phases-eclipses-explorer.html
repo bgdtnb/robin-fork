@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moon Orbit, Phases & Eclipses Explorer</title>
+<style>
+:root{
+  --bg:#08101c; --panel:#121a2a; --panel2:#0d1422; --line:#2b3855;
+  --text:#f5f7fb; --muted:#a9b4ca; --accent:#7b9cff;
+  --sun:#ffd55d; --earth:#4b8ed8; --node:#8fd3ff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,Helvetica,sans-serif;
+  color:var(--text); background:radial-gradient(circle at top,#18233d,#08101c 58%);
+}
+header{text-align:center;padding:22px 18px 8px}
+h1{margin:0 0 7px;font-size:clamp(28px,4vw,44px)}
+header p{margin:0;color:var(--muted)}
+.wrap{
+  width:min(1220px,calc(100% - 28px)); margin:20px auto 34px;
+  display:grid; grid-template-columns:1.35fr .65fr; gap:18px;
+}
+.card{
+  background:rgba(18,26,42,.97); border:1px solid var(--line); border-radius:18px;
+  padding:18px; box-shadow:0 12px 34px rgba(0,0,0,.28)
+}
+.title{font-size:18px;font-weight:800;margin-bottom:12px}
+#scene{
+  width:100%; height:auto; display:block; border-radius:14px;
+  background:#050914; border:1px solid #1d2942;
+}
+.panel{display:flex;flex-direction:column;gap:14px}
+.controls,.viewer,.callout,.fact{
+  background:var(--panel2);border:1px solid var(--line);border-radius:14px
+}
+.controls{padding:14px}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.actions button:last-child{grid-column:1/-1}
+button{
+  min-height:44px;border-radius:11px;border:1px solid #3c4c78;
+  background:#18243b;color:#fff;font-weight:700;cursor:pointer;padding:9px 11px
+}
+button:hover{background:#22304f}
+button.primary{background:#3457a6;border-color:#5878c3}
+label.toggle{
+  display:flex;align-items:center;gap:9px;color:var(--muted);
+  padding:9px 0;font-size:14px
+}
+select{
+  width:100%;min-height:42px;border-radius:10px;border:1px solid #3a496f;
+  background:#111a2b;color:#fff;padding:8px 10px;font-size:16px
+}
+.viewer{text-align:center;padding:14px}
+#phaseCanvas{width:210px;height:210px;max-width:100%;border-radius:50%;background:#05070c}
+.phaseName{font-size:27px;font-weight:800;margin-top:8px}
+.phaseDesc{color:var(--muted);font-size:14px;line-height:1.4;min-height:40px;margin-top:4px}
+.factgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.fact{padding:11px}
+.fact b{display:block;margin-bottom:4px}
+.fact span{color:var(--muted)}
+.callout{padding:12px;line-height:1.45}
+.alert{
+  border-color:#9b6b55;background:#241710;color:#ffd6ba;
+}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:13px}
+.key{display:flex;gap:7px;align-items:center}
+.swatch{width:25px;height:3px;border-radius:2px;background:#7f8ca8}
+.swatch.plane{background:#5b6782}.swatch.node{background:#8fd3ff}.swatch.orbit{background:#d5dbe8}
+.note{color:var(--muted);font-size:12px;margin-top:9px;line-height:1.4}
+.bottom{
+  width:min(1220px,calc(100% - 28px));margin:0 auto 34px;
+  display:grid;grid-template-columns:1fr 1fr;gap:18px
+}
+.bottom h3{margin:0 0 8px}
+.bottom p,.bottom li{color:#d2d9e8;line-height:1.45}
+.bottom ul{padding-left:20px;margin-bottom:0}
+@media(max-width:900px){
+  .wrap,.bottom{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Moon Orbit, Phases & Eclipses Explorer</h1>
+  <p>Watch the Moon orbit Earth continuously. Most New and Full Moons miss the eclipse plane; occasionally the geometry lines up.</p>
+</header>
+
+<main class="wrap">
+<section class="card">
+  <div class="title">Isometric Earth–Moon View</div>
+  <svg id="scene" viewBox="0 0 860 560" role="img" aria-label="Isometric Moon orbit and eclipse geometry">
+    <defs>
+      <radialGradient id="earthGrad" cx="35%" cy="30%">
+        <stop offset="0%" stop-color="#72d7ff"/>
+        <stop offset="42%" stop-color="#367ecf"/>
+        <stop offset="100%" stop-color="#0b2e60"/>
+      </radialGradient>
+      <radialGradient id="sunGrad">
+        <stop offset="0%" stop-color="#fff8bf"/>
+        <stop offset="40%" stop-color="#ffd55d"/>
+        <stop offset="100%" stop-color="#ff902c"/>
+      </radialGradient>
+      <radialGradient id="moonGrad" cx="35%" cy="30%">
+        <stop offset="0%" stop-color="#f1efe4"/>
+        <stop offset="100%" stop-color="#777b84"/>
+      </radialGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="7" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <rect width="860" height="560" fill="#050914"/>
+    <g fill="#fff" opacity=".5">
+      <circle cx="85" cy="82" r="1"/><circle cx="190" cy="470" r="1"/><circle cx="730" cy="95" r="1"/>
+      <circle cx="790" cy="410" r="1"/><circle cx="555" cy="70" r="1"/><circle cx="310" cy="125" r="1"/>
+    </g>
+
+    <g id="planeGroup">
+      <polygon id="planePoly" points="" fill="#55617b" opacity=".12" stroke="#6d7891" stroke-width="1.2"/>
+      <line id="sunAxis" x1="125" y1="280" x2="720" y2="280" stroke="#8d9ab8" stroke-width="1.5" stroke-dasharray="7 7" opacity=".6"/>
+    </g>
+
+    <g id="nodeGroup">
+      <line id="nodeLine" x1="0" y1="0" x2="0" y2="0" stroke="#8fd3ff" stroke-width="2.5" opacity=".9"/>
+      <circle id="nodeA" r="6" fill="#8fd3ff"/>
+      <circle id="nodeB" r="6" fill="#8fd3ff"/>
+      <text id="nodeALabel" fill="#a8ddff" font-size="12">Node</text>
+      <text id="nodeBLabel" fill="#a8ddff" font-size="12">Node</text>
+    </g>
+
+    <polyline id="orbitPath" points="" fill="none" stroke="#d8dce8" stroke-width="2.2" stroke-dasharray="6 5" opacity=".72"/>
+
+    <g id="shadowGroup" opacity="0">
+      <polygon id="solarShadow" points="" fill="#151824" opacity=".72"/>
+      <polygon id="lunarShadow" points="" fill="#4e365d" opacity=".48"/>
+    </g>
+
+    <g id="sunGroup">
+      <circle cx="100" cy="280" r="54" fill="url(#sunGrad)" filter="url(#glow)"/>
+      <text x="100" y="351" text-anchor="middle" fill="#ffe99f" font-size="15">Sun</text>
+      <text x="155" y="253" fill="#ffe99f" font-size="13">Sunlight →</text>
+    </g>
+
+    <g id="earthGroup">
+      <circle cx="430" cy="280" r="48" fill="url(#earthGrad)"/>
+      <text x="430" y="347" text-anchor="middle" fill="#b8c2d8" font-size="15">Earth</text>
+    </g>
+
+    <g id="moonGroup">
+      <circle id="moonBody" cx="0" cy="0" r="19" fill="url(#moonGrad)"/>
+      <path id="moonDark" d="" fill="#1c202a" opacity=".85"/>
+      <text id="moonLabel" x="0" y="0" fill="#b8c2d8" font-size="13">Moon</text>
+    </g>
+
+    <text id="eventText" x="430" y="35" text-anchor="middle" fill="#ffd3b8" font-size="21" font-weight="700"></text>
+  </svg>
+
+  <div class="legend">
+    <div class="key"><span class="swatch plane"></span> Earth–Sun plane</div>
+    <div class="key"><span class="swatch orbit"></span> Lunar orbit</div>
+    <div class="key"><span class="swatch node"></span> Orbital nodes</div>
+  </div>
+  <div class="note">
+    Schematic/not to scale. The physical lunar inclination is 5.1°. Vertical separation is visually exaggerated so students can clearly see the Moon pass above and below the Earth–Sun plane. Eclipse-season timing is accelerated for classroom demonstration.
+  </div>
+</section>
+
+<section class="card panel">
+  <div class="title">Earth View and Controls</div>
+
+  <div class="viewer">
+    <canvas id="phaseCanvas" width="240" height="240"></canvas>
+    <div class="phaseName" id="phaseName">New Moon</div>
+    <div class="phaseDesc" id="phaseDesc"></div>
+  </div>
+
+  <div class="controls">
+    <div style="margin-bottom:10px;font-weight:700">Animation Speed</div>
+    <select id="speedSelect">
+      <option value="0.5">0.5×</option>
+      <option value="1" selected>1×</option>
+      <option value="3">3×</option>
+      <option value="8">8×</option>
+    </select>
+
+    <div class="actions" style="margin-top:12px">
+      <button id="playBtn" class="primary">Pause</button>
+      <button id="resetBtn">Reset</button>
+      <button id="jumpBtn">Jump to Next Eclipse</button>
+    </div>
+
+    <label class="toggle"><input type="checkbox" id="nodesToggle" checked> Show nodes</label>
+    <label class="toggle"><input type="checkbox" id="planeToggle" checked> Show Earth–Sun plane</label>
+    <label class="toggle"><input type="checkbox" id="shadowToggle" checked> Show eclipse shadows</label>
+  </div>
+
+  <div class="factgrid">
+    <div class="fact"><b>Lunar Day</b><span id="dayFact">0.0</span></div>
+    <div class="fact"><b>Phase</b><span id="phaseFact">New Moon</span></div>
+    <div class="fact"><b>Relative to Plane</b><span id="planeFact">Near node</span></div>
+    <div class="fact"><b>Eclipse</b><span id="eclipseFact">None</span></div>
+  </div>
+
+  <div class="callout" id="message">
+    The Moon is at New Moon, but a solar eclipse only occurs if it is also near a node.
+  </div>
+</section>
+</main>
+
+<section class="bottom">
+  <div class="card">
+    <h3>Why phases happen every month</h3>
+    <ul>
+      <li>The Sun always illuminates half of the Moon.</li>
+      <li>As the Moon orbits Earth, we see different fractions of that illuminated half.</li>
+      <li>New, quarter, gibbous, and full phases occur every lunar month.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Why eclipses do not happen every month</h3>
+    <ul>
+      <li>The Moon's orbit is tilted about 5.1° relative to the Earth–Sun plane.</li>
+      <li>Most New and Full Moons occur above or below the exact eclipse alignment.</li>
+      <li>An eclipse requires New or Full Moon <em>and</em> the Moon being near an orbital node.</li>
+    </ul>
+  </div>
+</section>
+
+<script>
+const scene = document.getElementById("scene");
+const orbitPath = document.getElementById("orbitPath");
+const planePoly = document.getElementById("planePoly");
+const nodeLine = document.getElementById("nodeLine");
+const nodeA = document.getElementById("nodeA");
+const nodeB = document.getElementById("nodeB");
+const nodeALabel = document.getElementById("nodeALabel");
+const nodeBLabel = document.getElementById("nodeBLabel");
+const nodeGroup = document.getElementById("nodeGroup");
+const planeGroup = document.getElementById("planeGroup");
+const shadowGroup = document.getElementById("shadowGroup");
+const solarShadow = document.getElementById("solarShadow");
+const lunarShadow = document.getElementById("lunarShadow");
+const moonBody = document.getElementById("moonBody");
+const moonDark = document.getElementById("moonDark");
+const moonLabel = document.getElementById("moonLabel");
+const eventText = document.getElementById("eventText");
+
+const phaseCanvas = document.getElementById("phaseCanvas");
+const ctx = phaseCanvas.getContext("2d");
+const phaseName = document.getElementById("phaseName");
+const phaseDesc = document.getElementById("phaseDesc");
+const dayFact = document.getElementById("dayFact");
+const phaseFact = document.getElementById("phaseFact");
+const planeFact = document.getElementById("planeFact");
+const eclipseFact = document.getElementById("eclipseFact");
+const message = document.getElementById("message");
+
+const speedSelect = document.getElementById("speedSelect");
+const playBtn = document.getElementById("playBtn");
+const resetBtn = document.getElementById("resetBtn");
+const jumpBtn = document.getElementById("jumpBtn");
+const nodesToggle = document.getElementById("nodesToggle");
+const planeToggle = document.getElementById("planeToggle");
+const shadowToggle = document.getElementById("shadowToggle");
+
+const CX = 430, CY = 280;
+const ORBIT_R = 180;
+const INCLINATION = 5.145 * Math.PI/180;
+const VISUAL_Z_SCALE = 4.2; // disclosed visual exaggeration
+const MONTH = 29.5306;
+
+// Animation: one lunar orbit in 13 seconds at 1x.
+// Node orientation rotates once per 12 lunar orbits for teaching.
+// This accelerates eclipse seasons while preserving the geometry concept.
+const ORBIT_SECONDS = 13;
+const NODE_CYCLE_ORBITS = 12;
+
+let running = true;
+let lunarAngle = 0;        // 0 = New Moon, Moon toward Sun
+let orbitCountFloat = 0;
+let lastTime = null;
+let jumpMode = false;
+
+// Isometric-ish orthographic projection.
+function project(x,y,z){
+  // x points right, y points "depth", z vertical.
+  return {
+    x: CX + x + y*0.34,
+    y: CY + y*0.48 - z*VISUAL_Z_SCALE
+  };
+}
+
+function rotateZ(x,y,a){
+  return {x:x*Math.cos(a)-y*Math.sin(a), y:x*Math.sin(a)+y*Math.cos(a)};
+}
+
+function moon3D(theta,nodeAngle){
+  // Start with orbit in its own plane, then tilt about node line.
+  let x = -ORBIT_R*Math.cos(theta); // theta=0 puts Moon toward Sun (left)
+  let y = ORBIT_R*Math.sin(theta);
+  let z = 0;
+
+  // Rotate so node line has desired azimuth.
+  let r = rotateZ(x,y,-nodeAngle);
+
+  // Tilt about x-axis (node line).
+  let yt = r.y*Math.cos(INCLINATION);
+  let zt = r.y*Math.sin(INCLINATION);
+
+  // Rotate back.
+  let rb = rotateZ(r.x,yt,nodeAngle);
+  return {x:rb.x,y:rb.y,z:zt};
+}
+
+function nodeAngleNow(){
+  return (orbitCountFloat / NODE_CYCLE_ORBITS) * Math.PI*2;
+}
+
+function phaseInfo(theta){
+  let p = ((theta%(Math.PI*2))+Math.PI*2)%(Math.PI*2)/(Math.PI*2);
+  let name,desc;
+  if(p<.03 || p>.97){name="New Moon";desc="The Moon is in the Sun's direction from Earth."}
+  else if(p<.22){name="Waxing Crescent";desc="A growing crescent of the illuminated half is visible."}
+  else if(p<.28){name="First Quarter";desc="Half of the visible face appears illuminated."}
+  else if(p<.47){name="Waxing Gibbous";desc="More than half is illuminated and increasing."}
+  else if(p<.53){name="Full Moon";desc="Earth sees nearly the entire illuminated half."}
+  else if(p<.72){name="Waning Gibbous";desc="More than half is illuminated and decreasing."}
+  else if(p<.78){name="Third Quarter";desc="Half of the visible face appears illuminated."}
+  else{name="Waning Crescent";desc="A shrinking crescent remains visible."}
+  return {p,name,desc};
+}
+
+function renderEarthView(p,eclipsedType){
+  const W=phaseCanvas.width,H=phaseCanvas.height,cx=W/2,cy=H/2,R=W*.43;
+  const img=ctx.createImageData(W,H),d=img.data;
+  const a=2*Math.PI*p;
+  const sx=Math.sin(a),sz=-Math.cos(a);
+
+  for(let py=0;py<H;py++){
+    for(let px=0;px<W;px++){
+      const nx=(px-cx)/R,ny=(py-cy)/R,rr=nx*nx+ny*ny;
+      const i=(py*W+px)*4;
+      if(rr>1){d[i+3]=0;continue;}
+      const nz=Math.sqrt(1-rr);
+      const light=nx*sx+nz*sz;
+      const limb=.72+.28*nz;
+      const tex=.96+.04*Math.sin(px*.18)*Math.sin(py*.13);
+      let r,g,b;
+
+      if(eclipsedType==="lunar"){
+        const q=(.55+.35*nz)*tex;
+        r=176*q;g=82*q;b=55*q;
+      }else if(light>0){
+        const q=limb*tex;
+        r=242*q;g=240*q;b=218*q;
+      }else{
+        const q=(.05+.025*nz)*255;
+        r=q*.72;g=q*.79;b=q*.9;
+      }
+      d[i]=r;d[i+1]=g;d[i+2]=b;d[i+3]=255;
+    }
+  }
+  ctx.clearRect(0,0,W,H);
+  ctx.putImageData(img,0,0);
+
+  if(eclipsedType==="solar"){
+    ctx.save();
+    ctx.globalAlpha=.95;
+    ctx.beginPath();
+    ctx.arc(cx,cy,R*.98,0,Math.PI*2);
+    ctx.fillStyle="#0b0d12";
+    ctx.fill();
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(cx,cy,R*1.02,0,Math.PI*2);
+    ctx.strokeStyle="rgba(255,220,140,.7)";
+    ctx.lineWidth=5;
+    ctx.stroke();
+  }
+}
+
+function buildOrbit(nodeAngle){
+  const pts=[];
+  for(let i=0;i<=120;i++){
+    const t=i/120*Math.PI*2;
+    const m=moon3D(t,nodeAngle);
+    const p=project(m.x,m.y,m.z);
+    pts.push(`${p.x.toFixed(1)},${p.y.toFixed(1)}`);
+  }
+  orbitPath.setAttribute("points",pts.join(" "));
+
+  // Earth-Sun plane as isometric diamond.
+  const planePts=[
+    project(-250,-150,0),project(250,-150,0),project(250,150,0),project(-250,150,0)
+  ];
+  planePoly.setAttribute("points",planePts.map(p=>`${p.x},${p.y}`).join(" "));
+
+  // Nodes are theta values where z=0; in this construction, along the node line.
+  const dir={x:Math.cos(nodeAngle),y:Math.sin(nodeAngle)};
+  const A=project(ORBIT_R*dir.x,ORBIT_R*dir.y,0);
+  const B=project(-ORBIT_R*dir.x,-ORBIT_R*dir.y,0);
+
+  nodeLine.setAttribute("x1",A.x);nodeLine.setAttribute("y1",A.y);
+  nodeLine.setAttribute("x2",B.x);nodeLine.setAttribute("y2",B.y);
+
+  nodeA.setAttribute("cx",A.x);nodeA.setAttribute("cy",A.y);
+  nodeB.setAttribute("cx",B.x);nodeB.setAttribute("cy",B.y);
+  nodeALabel.setAttribute("x",A.x+8);nodeALabel.setAttribute("y",A.y-8);
+  nodeBLabel.setAttribute("x",B.x+8);nodeBLabel.setAttribute("y",B.y-8);
+
+  return {A,B};
+}
+
+function moonToSunAlignment(m){
+  // Sun direction is negative x. New Moon near (-x), Full Moon near (+x).
+  const r=Math.hypot(m.x,m.y,m.z);
+  const newDot=(-m.x)/r;
+  const fullDot=(m.x)/r;
+  return {newDot,fullDot};
+}
+
+function updateScene(){
+  const nAngle=nodeAngleNow();
+  buildOrbit(nAngle);
+
+  const m=moon3D(lunarAngle,nAngle);
+  const mp=project(m.x,m.y,m.z);
+
+  moonBody.setAttribute("cx",mp.x);moonBody.setAttribute("cy",mp.y);
+  moonLabel.setAttribute("x",mp.x+24);moonLabel.setAttribute("y",mp.y-20);
+
+  // Space-view illumination: dark hemisphere points away from Sun.
+  // Approximate with a half-disc clipped on the right side of the Moon.
+  const darkLeft = m.x < 0 ? 1 : 0;
+  if(darkLeft){
+    moonDark.setAttribute("d",`M ${mp.x} ${mp.y-19} A 19 19 0 0 0 ${mp.x} ${mp.y+19} L ${mp.x} ${mp.y-19} Z`);
+  }else{
+    moonDark.setAttribute("d",`M ${mp.x} ${mp.y-19} A 19 19 0 0 1 ${mp.x} ${mp.y+19} L ${mp.x} ${mp.y-19} Z`);
+  }
+
+  const info=phaseInfo(lunarAngle);
+  const align=moonToSunAlignment(m);
+  const nearPlane=Math.abs(m.z) < 5.5; // physical-coordinate threshold for node proximity
+  const newish=info.p<.035 || info.p>.965;
+  const fullish=info.p>.465 && info.p<.535;
+
+  let eclipse=null;
+  if(newish && nearPlane && align.newDot>.995) eclipse="solar";
+  if(fullish && nearPlane && align.fullDot>.995) eclipse="lunar";
+
+  // Shadows are symbolic and only shown near eclipse events.
+  if(shadowToggle.checked && eclipse==="solar"){
+    shadowGroup.setAttribute("opacity","1");
+    const e=project(0,0,0);
+    solarShadow.setAttribute("points",`${mp.x},${mp.y-8} ${mp.x},${mp.y+8} ${e.x+8},${e.y+7} ${e.x+8},${e.y-7}`);
+    lunarShadow.setAttribute("points","");
+  }else if(shadowToggle.checked && eclipse==="lunar"){
+    shadowGroup.setAttribute("opacity","1");
+    const e=project(0,0,0);
+    lunarShadow.setAttribute("points",`${e.x+35},${e.y-18} ${e.x+35},${e.y+18} ${mp.x},${mp.y+8} ${mp.x},${mp.y-8}`);
+    solarShadow.setAttribute("points","");
+  }else{
+    shadowGroup.setAttribute("opacity","0");
+    solarShadow.setAttribute("points","");
+    lunarShadow.setAttribute("points","");
+  }
+
+  renderEarthView(info.p,eclipse);
+
+  const lunarDay=info.p*MONTH;
+  dayFact.textContent=lunarDay.toFixed(1);
+  phaseFact.textContent=info.name;
+
+  if(Math.abs(m.z)<5.5) planeFact.textContent="Near orbital node";
+  else if(m.z>0) planeFact.textContent="Above plane";
+  else planeFact.textContent="Below plane";
+
+  phaseName.textContent=eclipse==="solar" ? "Solar Eclipse" : eclipse==="lunar" ? "Lunar Eclipse" : info.name;
+  phaseDesc.textContent=eclipse==="solar"
+    ? "New Moon + node alignment: the Moon passes directly between the Sun and Earth."
+    : eclipse==="lunar"
+      ? "Full Moon + node alignment: the Moon passes through Earth's shadow."
+      : info.desc;
+
+  if(eclipse==="solar"){
+    eclipseFact.textContent="Solar eclipse";
+    eventText.textContent="SOLAR ECLIPSE";
+    message.classList.add("alert");
+    message.textContent="This New Moon occurs near an orbital node, so the Moon crosses the Earth–Sun plane at the right time for a solar eclipse.";
+  }else if(eclipse==="lunar"){
+    eclipseFact.textContent="Lunar eclipse";
+    eventText.textContent="LUNAR ECLIPSE";
+    message.classList.add("alert");
+    message.textContent="This Full Moon occurs near an orbital node, so the Moon passes through Earth's shadow.";
+  }else{
+    eclipseFact.textContent="None";
+    eventText.textContent="";
+    message.classList.remove("alert");
+    if(newish){
+      message.textContent=nearPlane
+        ? "This is New Moon and the Moon is near a node, but the alignment is not quite exact enough for an eclipse."
+        : "This is New Moon, but the Moon is above or below the Earth–Sun plane, so its shadow misses Earth.";
+    }else if(fullish){
+      message.textContent=nearPlane
+        ? "This is Full Moon and the Moon is near a node, but the alignment is not quite exact enough for a lunar eclipse."
+        : "This is Full Moon, but the Moon is above or below Earth's shadow, so no lunar eclipse occurs.";
+    }else{
+      message.textContent="The Moon's phase changes continuously as it orbits. Eclipses are only possible near New or Full Moon and near an orbital node.";
+    }
+  }
+
+  nodeGroup.style.display=nodesToggle.checked?"":"none";
+  planeGroup.style.display=planeToggle.checked?"":"none";
+}
+
+function step(ts){
+  if(lastTime===null) lastTime=ts;
+  const dt=Math.min(.05,(ts-lastTime)/1000);
+  lastTime=ts;
+
+  if(running || jumpMode){
+    const speed=parseFloat(speedSelect.value);
+    const angularSpeed=(Math.PI*2/ORBIT_SECONDS)*(jumpMode?10:speed);
+    lunarAngle += angularSpeed*dt;
+
+    while(lunarAngle>=Math.PI*2){
+      lunarAngle-=Math.PI*2;
+      orbitCountFloat += 1;
+    }
+
+    if(jumpMode){
+      const nAngle=nodeAngleNow();
+      const m=moon3D(lunarAngle,nAngle);
+      const info=phaseInfo(lunarAngle);
+      const align=moonToSunAlignment(m);
+      const nearPlane=Math.abs(m.z)<5.5;
+      const newish=info.p<.035 || info.p>.965;
+      const fullish=info.p>.465 && info.p<.535;
+      if((newish&&nearPlane&&align.newDot>.995)||(fullish&&nearPlane&&align.fullDot>.995)){
+        jumpMode=false;
+        running=false;
+        playBtn.textContent="Play";
+      }
+    }
+  }
+
+  // Let the node orientation drift continuously within an orbit too.
+  orbitCountFloat += ((running||jumpMode)?dt:0) * (parseFloat(speedSelect.value)/(ORBIT_SECONDS*NODE_CYCLE_ORBITS));
+
+  updateScene();
+  requestAnimationFrame(step);
+}
+
+playBtn.addEventListener("click",()=>{
+  running=!running;
+  jumpMode=false;
+  playBtn.textContent=running?"Pause":"Play";
+});
+resetBtn.addEventListener("click",()=>{
+  running=true;jumpMode=false;lunarAngle=0;orbitCountFloat=0;lastTime=null;
+  playBtn.textContent="Pause";
+});
+jumpBtn.addEventListener("click",()=>{
+  jumpMode=true;running=false;playBtn.textContent="Play";
+});
+nodesToggle.addEventListener("change",updateScene);
+planeToggle.addEventListener("change",updateScene);
+shadowToggle.addEventListener("change",updateScene);
+speedSelect.addEventListener("change",()=>{});
+
+updateScene();
+requestAnimationFrame(step);
+</script>
+</body>
+</html>

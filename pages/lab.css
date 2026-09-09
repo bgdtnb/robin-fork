@@ -1,0 +1,227 @@
+:root {
+  --bg: #0b0f19;
+  --panel: #111827;
+  --panel2: #0f172a;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #f59e0b;
+  --red: #e11d48;
+  --green: #10b981;
+  --blue: #38bdf8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+  color: var(--text);
+  background: radial-gradient(ellipse at top, #1e1b2e 0%, #0b0f19 60%);
+  -webkit-font-smoothing: antialiased;
+}
+
+header {
+  text-align: center;
+  margin: 0 auto 20px;
+  max-width: 1100px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.lab {
+  max-width: 1240px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+  gap: 20px;
+}
+
+.card {
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.stage { padding: 12px; }
+
+.stage canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #07101c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  touch-action: none;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.control label, .control strong {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.control output {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.control input[type=range], .control select {
+  width: 100%;
+  accent-color: var(--red);
+}
+
+.control select {
+  padding: 8px 10px;
+  background: #090d16;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.buttons button, .lab-button {
+  border: 0;
+  background: #334155;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.buttons button:hover, .lab-button:hover {
+  background: #475569;
+}
+
+.buttons .primary {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+}
+
+.buttons .primary:hover {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+}
+
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.readout {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.readout b {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.readout span {
+  font: 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.explain {
+  line-height: 1.5;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.status {
+  border-left: 4px solid var(--accent);
+  padding: 10px 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 0 6px 6px 0;
+  color: #fde68a;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.keyboard {
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media(max-width: 800px) {
+  body { padding: 12px; }
+  .lab { grid-template-columns: 1fr; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; }
+  .controls > *:first-child, .controls > *:last-child { grid-column: 1 / -1; }
+}
+
+@media(max-width: 520px) {
+  .controls { display: flex; }
+  .readouts { grid-template-columns: 1fr 1fr; }
+}
