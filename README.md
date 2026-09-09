@@ -2,6 +2,8 @@
 
 A no-build, static website for GitHub Pages. It recreates a late-1990s/early-2000s class site while using responsive HTML, CSS, and JavaScript.
 
+## Directory Structure
+
 ## Publish with GitHub Pages
 
 1. Push this folder to the repository's default branch.
@@ -16,4 +18,25 @@ A no-build, static website for GitHub Pages. It recreates a late-1990s/early-200
 4. Add the new filename to that folder's `index.json`, newest first.
 5. Commit and push.
 
-The visitor counter uses CounterAPI when online and falls back to a per-browser count if that service cannot be reached. The site's displayed date and copyright year are generated from the viewer's current date.
+ATHS Robotics & Boris Donald's Science Classes/
+├── .git/
+├── 404.html
+├── README.md
+├── assets/
+│   ├── (static resources, images, stylesheets, scripts)
+├── downloads/
+│   ├── (downloadable files or resources)
+├── index.html
+├── pages/
+│   ├── (individual pages or sections of the site)
+├── posts/
+│   ├── astronomy/
+│   │   ├── (astronomy-related posts and index.json)
+│   ├── chemistry/
+│   │   ├── (chemistry-related posts and index.json)
+│   ├── physics/
+│   │   ├── (physics-related posts and index.json)
+│   ├── robotics/
+│   │   ├── (robotics-related posts and index.json)
+├── tests/
+│   ├── (test files for the project)
